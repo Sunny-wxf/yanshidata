@@ -5,45 +5,44 @@ import cx_Oracle
 import datetime
 from conf import Config as Config
 
-
 class MyOracle(object):
 
     SHOW_SQL = True
 
     def __init__(self):
         # 得到配置的数据库信息
-        self.db_user = Config().getconf("db").ttw
+        self.__db_user = Config().getconf("db").ttw
+        try:
+            self.__conn = cx_Oracle.connect(self.__db_user)
+            self.__cur = self.__conn.cursor()
+        except cx_Oracle.Error as e:
+            print("cx_Oracle Error:%s" % e)
 
     def get_con(self):
         try:
-            conn = cx_Oracle.connect(self.db_user)
+            conn = cx_Oracle.connect(self.__db_user)
             return conn
         except cx_Oracle.Error as e:
             print("cx_Oracle Error:%s" % e)
 
     def select_all(self, sql):
-        con = self.get_con()
-        # print con
-        # 使用cursor()方法获取操作游标
-        cur = con.cursor()
         try:
-            cur.execute(sql)
-            fc = cur.fetchall()
+            self.__cur.execute(sql)
+            fc = self.__cur.fetchall()
             return fc
         except cx_Oracle.Error as e:
             print("cx_Oracle Error:%s" % e)
         finally:
-            cur.close()
-            con.close()
+            self.__cur.close()
+            self.__conn.close()
 
     def select_by_where(self, sql, data):
-        con = self.get_con()
-        cur = con.cursor()
+        data_dic = {}
+        for i in range(len(data)):
+            data_dic[str(i+1)] = data[i]
         try:
-            s=str()
-            d = data
-            cur.execute(sql, d)
-            fc = cur.fetchall()
+            self.__cur.execute(sql, data_dic)
+            fc = self.__cur.fetchall()
             # if len(fc) > 0:
             #     for e in range(len(fc)):
             #         print(fc[e])
@@ -51,39 +50,35 @@ class MyOracle(object):
         except cx_Oracle.Error as e:
             print("cx_Oracle Error:%s" % e)
         finally:
-            cur.close()
-            con.close()
+            self.__cur.close()
+            self.__conn.close()
 
     def dml_by_where(self, sql, params):
-        con = self.get_con()
-        cur = con.cursor()
         try:
             for d in params:
                 if self.SHOW_SQL:
                     print('执行sql:[{}],参数:[{}]'.format(sql, d))
-                cur.execute(sql, d)
-            con.commit()
+                self.__cur.execute(sql, d)
+            self.__cur.commit()
         except cx_Oracle.Error as e:
-            con.rollback()
+            self.__cur.rollback()
             print("cx_Oracle Error:%s" % e)
         finally:
-            cur.close()
-            con.close()
+            self.__cur.close()
+            self.__conn.close()
 
     # 不带参数的更新方法
     def dml_nowhere(self, sql):
-        con = self.get_con()
-        cur = con.cursor()
         try:
-            count = cur.execute(sql)
-            con.commit()
+            count = self.__cur.execute(sql)
+            self.__cur.commit()
             return count
         except cx_Oracle.Error as e:
-            con.rollback()
+            self.__cur.rollback()
             print("cx_Oracle Error:%s" % e)
         finally:
-            cur.close()
-            con.close()
+            self.__cur.close()
+            self.__conn.close()
 
 # 开始测试函数
 
@@ -91,13 +86,14 @@ class MyOracle(object):
 def select_all():
     sql = "select * from use_info"
     fc = my_oracle.select_all(sql)
-    for row in fc:
-        print(row)
+    print(fc)
+    # for row in fc:
+    #     print(row)
 
 
 def select_by_where():
-    sql = "select * from user_info where id=d[:1]"
-    data = ['42542bcee55f437e9d28917ba36d206e', '25f4432083f44c57a9aebbccd0bf5b02']
+    sql = "select * from user_info where id =:1"
+    data = ['42542bcee55f437e9d28917ba36d206e']
     fc = my_oracle.select_by_where(sql, data)
     for row in fc:
         print(row)
