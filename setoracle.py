@@ -5,7 +5,7 @@ import cx_Oracle
 from conf import Config as Config
 
 
-def ConnectDb():
+def connect_db():
     # 连接数据库
     db_user = Config().getconf("db").ttw
     # 这里的顺序是用户名 / 密码 @ oracleserver的ip地址 / 数据库名字
@@ -24,4 +24,5 @@ def ConnectDb():
 
 
 if __name__ == '__main__':
-    ConnectDb()
+    connect_db()
+
