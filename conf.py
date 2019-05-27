@@ -25,7 +25,7 @@ class Config(object):
         file_name = current_dir + "\\config\\conf.ini"
         # 实例化ConfigParser对象
         self.config = configparser.ConfigParser()
-        self.config.read(file_name)
+        self.config.read(file_name, encoding='utf-8')
         # 根据section把key、value写入字典
         for section in self.config.sections():
             setattr(self, section, Dictionary())
