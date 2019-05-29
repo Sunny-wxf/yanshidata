@@ -1,27 +1,30 @@
 import requests
 import re
 from xlwt import Workbook
-import xlrd
-import time
+# import xlrd
+# import time
 
 
-def key_name(number):
+def key_name():
     # 获取页面的内容并返回
-    name = '手机'
-    URL_1 = "https://s.taobao.com/search?ie=utf8&initiative_id=staobaoz_20170905&stats_click=search_radio_all%3A1&js=1&imgfile=&q="
-    URL_2 = "&suggest=0_1&_input_charset=utf-8&wq=u&suggest_query=u&source=suggest&p4ppushleft=5%2C48&s="
-    URL = (URL_1 + name + URL_2 + str(number))
+    name = '姓名'
+    # URL_1 = "https://s.taobao.com/search?ie=utf8&initiative_id=staobaoz_20170905&stats_click=search_radio_all%3A1&js=1&imgfile=&q="
+    # URL_2 = "&suggest=0_1&_input_charset=utf-8&wq=u&suggest_query=u&source=suggest&p4ppushleft=5%2C48&s="
+    URL = 'http://www.resgain.net/xsdq.html'
+    # url = 'http://zhao.resgain.net/name_list.html'
     # print(URL)
     res = requests.get(URL)
+    # print(res.text)
     return res.text
 
 
 def find_date(text):
     # 根据整个页面的信息，获取商品的数据所在的HTML源码并放回
-    reg = r',"data":{"spus":\[({.+?)\]}},"header":'
-    reg = re.compile(reg)
+    relink ='href="//[A-Za-z]+\.'
+    reg = re.compile(relink)
     info = re.findall(reg, text)
-    return info[0]
+    # print(info)
+    return info
 
 
 def manipulation_data(info, N, sheet):
@@ -60,4 +63,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    name_info=find_date(key_name())
+    for name in name_info:
+        lenth = len(name)-1
+        name_url = 'http://'+name[8:lenth]+'.resgain.net/name_list.html'
+        print(name_url)
