@@ -1,70 +1,33 @@
 import requests
 import re
 from xlwt import Workbook
+from conf import Config as Config
+import random
 # import xlrd
 # import time
 
 
-def key_name():
-    # 获取页面的内容并返回
-    name = '姓名'
-    # URL_1 = "https://s.taobao.com/search?ie=utf8&initiative_id=staobaoz_20170905&stats_click=search_radio_all%3A1&js=1&imgfile=&q="
-    # URL_2 = "&suggest=0_1&_input_charset=utf-8&wq=u&suggest_query=u&source=suggest&p4ppushleft=5%2C48&s="
-    URL = 'http://www.resgain.net/xsdq.html'
-    # url = 'http://zhao.resgain.net/name_list.html'
-    # print(URL)
-    res = requests.get(URL)
-    # print(res.text)
-    return res.text
-
-
-def find_date(text):
-    # 根据整个页面的信息，获取商品的数据所在的HTML源码并放回
-    relink ='href="//[A-Za-z]+\.'
-    reg = re.compile(relink)
-    info = re.findall(reg, text)
-    # print(info)
-    return info
-
-
-def manipulation_data(info, N, sheet):
-    # 解析获取的HTML源码，获取数据
-    Date = eval(info)
-
-    for d in Date:
-        T = " ".join([t['tag'] for t in d['tag_info']])
-        # print(d['title'] + '\t' + d['price'] + '\t' + d['importantKey'][0:len(d['importantKey'])-1] + '\t' + T)
-
-        sheet.write(N, 0, d['title'])
-        sheet.write(N, 1, d['price'])
-        sheet.write(N, 2, T)
-        N = N + 1
-    return N
-
-
-def main():
-    book = Workbook()
-    sheet = book.add_sheet('淘宝手机数据')
-    sheet.write(0, 0, '品牌')
-    sheet.write(0, 1, '价格')
-    sheet.write(0, 2, '配置')
-    book.save('淘宝手机数据.xls')
-    # k用于生成链接，每个链接的最后面的数字相差48.
-    # N用于记录表格的数据行数，便于写入数据
-    k = 0
-    N = 1
-    for i in range(10 + 1):
-        text = key_name(k + i * 48)
-        info = find_date(text)
-        N = manipulation_data(info, N, sheet)
-
-        book.save('淘宝手机数据.xls')
-        print('下载第' + str(i) + '页完成')
+def get_name():
+    # 获取百家姓对应名字集的链接
+    url = Config().getconf("name").url_name
+    res = requests.get(url)
+    reg_last_name = 'href="//[A-Za-z]+\.'
+    reg_last_name = re.compile(reg_last_name)
+    last_name = re.findall(reg_last_name, res.text)
+    last_name_dic = []
+    for last_name in last_name:
+        url_last_name = 'http:' + last_name[6:len(last_name) - 1] + '.resgain.net/name_list.html'
+        last_name_dic.append(url_last_name)
+    # 获取百家姓中每个姓氏随机10个名字
+    name_dic = []
+    for link in last_name_dic:
+        res = requests.get(link)
+        reg_get_name = '(?<=href="/name/).*?(?=.html" class)'
+        reg_name = re.compile(reg_get_name)
+        name = re.findall(reg_name, res.text)
+        [name_dic.append(x) for x in random.sample(name, 4)]
+    print(name_dic)
 
 
 if __name__ == '__main__':
-    name_info=find_date(key_name())
-    for name in name_info:
-        lenth = len(name)-1
-        name_url = 'http://'+name[8:lenth]+'.resgain.net/name_list.html'
-        print(name_url)
+    get_name()
