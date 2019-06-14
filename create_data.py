@@ -12,7 +12,7 @@ import sys
 
 class CreateData(object):
 
-    __logging = Log().get_instance('tw_agent')
+    __logging = Log().get_instance('tw_create_data')
 
     def __init__(self):
         """
@@ -56,7 +56,6 @@ class CreateData(object):
             else:
                 self.__logging.debug('The request error,please check')
 
-
     def apply_provincial_agent(self):
         """
         申请代理商
@@ -71,8 +70,8 @@ class CreateData(object):
 
 
 if __name__ == '__main__':
-    createdata = CreateData()
-    createdata.real_name()
+    create_data = CreateData()
+    create_data.real_name()
 
 
 
