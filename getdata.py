@@ -4,11 +4,18 @@ from conf import Config as Config
 import random
 import datetime
 import sys
+# import threading
+from concurrent.futures import ThreadPoolExecutor,Future
+import os
 
 
 class GetData(object):
     # 为生成数据获取各种类型的数据
-    def get_name(self):
+    def __init__(self):
+        self.name_dic = []
+        self.exec_counts = 0
+
+    def get_last_name(self):
         """
         姓名
         :return: name_dic
@@ -23,15 +30,37 @@ class GetData(object):
         for last_name in last_name:
             url_last_name = 'http:' + last_name[6:len(last_name) - 1] + '.resgain.net/name_list.html'
             last_name_dic.append(url_last_name)
-        # 获取百家姓中每个姓氏随机10个名字
-        name_dic = []
-        # for link in random.sample(last_name_dic):
-        res = requests.get(random.sample(last_name_dic, 1)[0])
+        return last_name_dic
+
+    def get_name(self):
+        # 获取百家姓中每个姓氏随机8个名字
+        res = requests.get(random.sample(self.get_last_name(), 1)[0])
+        self.exec_counts += 1
+        # print('线程pid: %s: ' % (os.getpid()) + '获取姓氏' + str(self.exec_counts) + '次')
+        # print(res)
         reg_get_name = '(?<=href="/name/).*?(?=.html" class)'
         reg_name = re.compile(reg_get_name)
         name = re.findall(reg_name, res.text)
-        [name_dic.append(x) for x in random.sample(name, 8)]
-        return name_dic
+        if len(name) >= 8:
+            [self.name_dic.append(x) for x in random.sample(name, 8)]
+        else:
+            pass
+        return self.name_dic
+        # print(self.name_dic)
+
+    def parse(self, name_dic):
+        print('子线程pid: %s: ' % (os.getpid()) + name_dic.result()[0])
+
+    def get_name_threads(self):
+        name_length = sys.argv[1]
+        counts = 1
+        pool = ThreadPoolExecutor(5)
+        for i in range(int(int(name_length)/8)):
+            pool.submit(self.get_name).add_done_callback(self.parse)
+            # pool.map(self.get_name())
+            print("提交" + str(counts) + "次")
+            counts += 1
+        # print(self.name_dic)
 
     def generator(self):
         """
@@ -62,5 +91,6 @@ class GetData(object):
 
 
 if __name__ == '__main__':
+    print('注线程pid: %s: ' % (os.getpid()) )
     get_data = GetData()
-    get_data.get_name()
+    get_data.get_name_threads()
